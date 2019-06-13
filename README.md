@@ -11,7 +11,19 @@ Even though part of it run in Qemu, it has specifically been written for the fol
 
 ## Features
 
-CHAOS right now only displays the Mandelbrot Set and provides the following features:
+CHAOS right now offers minimum functionalities:
+
+- A heap management system (`malloc()` and `free()`, pages allocation)
+- Fixed and proportionally-spaced fonts
+- Partial FAT32 filesystem support
+- Handling of CPU exceptions (and displays debbuging information in case a crash occurs)
+- A rudimentary application launcher, allowing to start apps which can interact with the touchscreen. Right now two apps are available:
+    - A Mandelbrot app (see below)
+    - A Filesystem app which looks at the FAT32 partitions on the SD card and displays the content of the first partition's root directory
+
+## Mandelbrot App
+
+The Mandelbrot app displays the Mandelbrot Set and provides the following features:
 
 - It is using the touchscreen 800x480 resolution using the [RPi graphical mode](mailbox.md)
 - It uses the RPi's 4 cores to compute the set in parallel in order to go faster. That part is working when using qemu.
@@ -20,6 +32,7 @@ CHAOS right now only displays the Mandelbrot Set and provides the following feat
     - Pinch to zoom in or out
     - Swipe up or down on the left hand side to change the maximum number of iterations
     - Tap on the top right end corner to return to the initial zoom
+    - Tap on the bottom left end corner to quit the app to return to the main menu
 - It has its own fixed-size and proportional fonts as well as an memory hex viewer (both on the screen or on the UART) for debugging purposes
 
 ## Thanks
