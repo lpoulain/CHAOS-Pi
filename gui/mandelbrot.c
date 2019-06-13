@@ -56,7 +56,7 @@ void mandelbrot_calibrate() {
 	y_delta = (y2 - y1) / get_display_height();
 }
 
-void mandelbrot_init() {
+void mandelbrot_reset() {
 	width_px = get_display_width();
     height_px = get_display_height();
 
@@ -235,8 +235,33 @@ void draw_mandelbrot_multicore() {
 
 void mandelbrot_tap() {
     if (ref_x1_px > width_px - 50 && ref_y1_px < 50) {
-        mandelbrot_init();
+        mandelbrot_reset();
         draw_mandelbrot_multicore();
+    }
+}
+
+void mandelbrot_init() {
+    mandelbrot_reset();
+    set_font(1);
+
+    draw_mandelbrot_multicore();
+}
+
+void mandelbrot_process_touch_event(enum TouchStatus status) {
+    switch(status) {
+        case TAP:
+            mandelbrot_tap();
+            break;
+        case SWIPE:
+            mandelbrot_move_coordinates();
+            draw_mandelbrot_multicore();
+            break;
+        case PINCH:
+            mandelbrot_zoom();
+            draw_mandelbrot_multicore();
+            break;
+        default:
+            break;
     }
 }
 

@@ -137,3 +137,5 @@ SECTIONS
                 *(*)
         }
 }
+
+__bss_size = (__bss_end - __bss_start)>>3;

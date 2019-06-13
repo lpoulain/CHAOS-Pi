@@ -4,14 +4,14 @@
 #include "font.h"
 #include "stdarg.h"
 
-#define WIDTH       800
-#define HEIGHT      480
+#define SCREEN_WIDTH       800
+#define SCREEN_HEIGHT      480
 
 uint width, height, pitch;
 uint *buffer;
-uint backup_buffer[WIDTH][HEIGHT];
+uint backup_buffer[SCREEN_WIDTH][SCREEN_HEIGHT];
 
-uint cursor_x, cursor_y;
+uint cursor_x=0, cursor_y=0, cursor_x_ref = 0, cursor_y_ref=0;
 
 void display_init() {
 	mbox_add4(MBOX_SET_PHYSICAL_DISPLAY, 8, 8, 800, 480);  // Resolution: 800x480
@@ -32,18 +32,15 @@ void display_init() {
     cursor_y = 0;
 }
 
-void set_cursor(uint x, uint y) {
+void print_set_cursor(uint x, uint y) {
+    cursor_x_ref = x;
+    cursor_y_ref = y;
     cursor_x = x;
     cursor_y = y;
 }
 
-void cursor_cr() {
-    cursor_x = 0;
-    cursor_y += get_font_height();
-}
-
-uint get_display_width() { return WIDTH; }
-uint get_display_height() { return HEIGHT; }
+uint get_display_width() { return SCREEN_WIDTH; }
+uint get_display_height() { return SCREEN_HEIGHT; }
 uint get_display_pitch() { return pitch; }
 uint *get_display_buffer() { return buffer; }
 
@@ -122,13 +119,13 @@ void animate(int x) {
 
 uint draw_string(const char *str, int x, int y) {
     int len = strlen(str);
-    int x_pos = x;
+    uint x_pos = x;
 
     for (int i=0; i<len; i++) {
         x_pos += draw_font(str[i], x_pos, y);
     }
 
-    return x_pos;
+    return x_pos - x;
 }
 
 uint draw_string_n(const char *str, int x, int y, int len) {
@@ -138,21 +135,28 @@ uint draw_string_n(const char *str, int x, int y, int len) {
         x_pos += draw_font(str[i], x_pos, y);
     }
 
-    return x_pos;
+    return x_pos - x;
 }
 
 uint draw_char(char c, int x, int y) {
     return draw_font(c, x, y);
 }
 
-uint draw_hex(char b, int x, int y) {
+uint draw_hex_0x(char b, int x, int y) {
     unsigned char str[5];
     ctoa_hex_0x(b, (unsigned char *)&str);
     return draw_string((char *)&str, x, y);
 }
 
 // Prints a character in hex format, without the "0x"
-uint draw_hex2(char b, int x, int y) {
+uint draw_hex(char b, int x, int y) {
+    unsigned char str[3];
+    ctoa_hex(b, (unsigned char *)&str);
+    return draw_string((char *)&str, x, y);
+}
+
+// Prints a character in hex format, without the "0x"
+uint draw_hex_long(char b, int x, int y) {
     unsigned char str[3];
     ctoa_hex(b, (unsigned char *)&str);
     return draw_string((char *)&str, x, y);
@@ -192,7 +196,7 @@ void display_dump_mem(void *ptr, int nb_bytes, uint x, uint y) {
 
 //    draw_string("                                                  ", 10*8, row*8);
     for (i=0; i< 16-offset; i++) {
-        draw_hex2(*addr, (offset * 3 + 20 + i*3)*8, 0);
+        draw_hex(*addr, (offset * 3 + 20 + i*3)*8, 0);
         draw_char(ascii[*addr++], (69 + i)*8, 0);
     }
 
@@ -201,32 +205,60 @@ void display_dump_mem(void *ptr, int nb_bytes, uint x, uint y) {
         draw_ptr(addr - 0, 0, (++row)*8);
 //        draw_string("                                                  ", 10*8, row*8);
         for (i=0; i<16; i++) {
-            draw_hex2(*addr, (20 + i*3)*8, row*8);
+            draw_hex(*addr, (20 + i*3)*8, row*8);
             draw_char(ascii[*addr++], (69 + i)*8, row*8);
         }
     }
 
 }
 
-void printf(const char *format, va_list args) {
+void print_string(char *str) {
+    cursor_x += draw_string(str, cursor_x, cursor_y);
+}
+
+void print_string_n(char *str, int nb) {
+    cursor_x += draw_string_n(str, nb, cursor_x, cursor_y);
+}
+
+void print_char(char c) {
+    cursor_x += draw_font(c, cursor_x, cursor_y);
+}
+
+void print_int(uint nb) {
+    cursor_x += draw_int(nb, cursor_x, cursor_y);
+}
+
+void print_clr() {
+    cursor_x = cursor_x_ref;
+    cursor_y = cursor_y_ref;
+}
+
+void print_cr() {
+    cursor_x = cursor_x_ref;
+    cursor_y += get_font_height();
+}
+
+void printf(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+
     int x = 0, y;
     char *str;
-    char tmp[3], ch;
+    char tmp[16], ch;
     uint ip;
     uint8 *ip_ptr;
 
     for (; *format != 0; ++format) {
         if (*format == '\n') {
-            cursor_cr();
+            print_cr();
         } else if (*format == '%') {
             ++format;
             switch(*format) {
                 case 'd':
-                    x+= draw_int(va_arg( args, int ), cursor_x, cursor_y);
+                    print_int(va_arg( args, int ));
                     break;
                 case 's':
                     str = (char*)(uint64)va_arg( args, int );
-//                    win->action->puts(win, str);
                     x = 0;
                     y = 0;
                     ch = str[y];
@@ -234,39 +266,40 @@ void printf(const char *format, va_list args) {
                         while (ch != 0 && ch != 0x0A) ch = str[++y];
   
                         if (ch == 0x0A) {
-                            cursor_x += draw_string_n(str + x, y - x, cursor_x, cursor_y);
+                            print_string_n(str + x, y - x);
 
                             x = ++y;
 //                            y = x;
                             ch = str[y];
-                            cursor_cr();
+                            print_cr();
                         } else {
-                            cursor_x += draw_string(str + x, cursor_x, cursor_y);
+                            print_string(str + x);
                         }
                     }
                     break;
                 case 'x':
-                    cursor_x += draw_int(va_arg(args, long long), cursor_x, cursor_y);
+                    itoa_hex(va_arg(args, uint), (unsigned char*)&tmp);
+                    print_string(tmp);
                     break;
                 case 'X':
-                    ctoa_hex(va_arg(args, int), (unsigned char*)&tmp);
-                    cursor_x += draw_string(tmp, cursor_x, cursor_y);
+                    itoa_hex_64(va_arg(args, uint64), (unsigned char*)&tmp);
+                    print_string(tmp);
                     break;
                 case 'i':
                     ip = va_arg(args, unsigned int);
                     ip_ptr = (uint8*)&ip;
-                    cursor_x += draw_int(ip_ptr[0], cursor_x, cursor_y);
-                    cursor_x += draw_char('.', cursor_x, cursor_y);
-                    cursor_x += draw_int(ip_ptr[1], cursor_x, cursor_y);
-                    cursor_x += draw_char('.', cursor_x, cursor_y);
-                    cursor_x += draw_int(ip_ptr[2], cursor_x, cursor_y);
-                    cursor_x += draw_char('.', cursor_x, cursor_y);
-                    cursor_x += draw_int(ip_ptr[3], cursor_x, cursor_y);
+                    print_int(ip_ptr[0]);
+                    print_char('.');
+                    print_int(ip_ptr[1]);
+                    print_char('.');
+                    print_int(ip_ptr[2]);
+                    print_char('.');
+                    print_int(ip_ptr[3]);
                     break;
             }
         }
         else {
-            cursor_x += draw_char(*format, cursor_x, cursor_y);
+            print_char(*format);
         }
     }
 }

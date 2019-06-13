@@ -38,7 +38,8 @@ uint atoi_hex(char *str);
 int atoi(char *str);
 void itoa(int, char*);
 void itoa_right(int nb, char *number);
-void itoa_hex(uint64 nb, unsigned char *str);
+void itoa_hex(uint nb, unsigned char *str);
+void itoa_hex_64(uint64 nb, unsigned char *str);
 void itoa_hex_0x(uint nb, unsigned char *str);
 void itoa_hex_0x64(uint64 nb, unsigned char *str);
 void ctoa_hex(char c, unsigned char *str);
@@ -54,13 +55,21 @@ void memcpy(void *dest, const void *src, uint len);
 void memset(void *dest, uint8 val, uint len);
 void lmemcpy(uint *dest, const uint *src, uint len);
 void lmemset(uint *dest, uint val, uint len);
+void clear_pages(void *dest, int nb_pages);
+
 void crash();
+
+uint8 *get_ptr(void *, uint offset);
+uint8 get_uint8(void *, uint offset);
+uint16 get_uint16(void *, uint offset);
+uint32 get_uint32(void *, uint offset);
 
 void EnableInterrupts();
 
 uint8_t CoreExecute (uint8_t coreNum, void (*func) (void));
 
 void wait_msec(unsigned int n);
+void wait_cycles(unsigned int n);
 uint get_timer();
 void init_sync_cores();
 void core_complete(uint i);

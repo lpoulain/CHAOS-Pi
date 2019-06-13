@@ -3,7 +3,7 @@
 
 #include "libc.h"
 
-enum TouchStatus { NOTOUCH, TAP, SWIPE, PINCH };
+enum TouchStatus { NOTOUCH, TAP, SWIPE, PINCH, EXIT };
 
 enum TouchStatus touchscreen_poll();
 int touchscreen_x1();

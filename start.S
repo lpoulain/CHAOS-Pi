@@ -125,7 +125,7 @@ exit_el1:
 //"================================================================"
 //  Set vector table for EL1 for Cores (Yep all use same vectors)
 //"================================================================"
-    ldr x0, =VectorTable                                                
+    ldr x0, =vectors                                                
     msr vbar_el1,x0
 
         mrs x6, mpidr_el1                                               // Read core id on ARM8
@@ -237,7 +237,7 @@ secondary_spin:
 /* We assume interrupt code has no FPU use, if it does user must save FPU registers  */
 /* So we will need to save registers x0-x7, x8-x15, x16-x18, x29, x30,                           */
 .weak irq_handler_stub
-irq_handler_stub:
+irq_handler_stub_old:
         stp     x29, x30, [sp, #-16]!                                                   // Store frame pointer and Link register
         stp     x18, x19,  [sp, #-16]!                                                  // Save register x18, as C will trash it.. 19 just there as a pair
         stp     x16, x17,  [sp, #-16]!                                                  // Save register x16, x17 as C will trash them
@@ -258,7 +258,7 @@ irq_handler_stub:
         blr x0                                                                                          // Call Irqhandler that has been set
 no_irqset:
 
-
+irq_handler_stub:
         ldp     x0, x1,  [sp], #16                                                              // Restore register x0, x1
         ldp     x2, x3,  [sp], #16                                                              // Restore register x2, x3
         ldp     x4, x5,  [sp], #16                                                              // Restore register x4, x5
@@ -271,6 +271,34 @@ no_irqset:
         ldp     x18, x19,  [sp], #16                                                    // Restore register x18, x19
     ldp x29, x30, [sp], #16                                                             // Restore frame pointer and Link register
         eret
+
+    bl  disable_irq
+    stp   x0,  x1,  [sp, #-16]!
+    stp   x2,  x3,  [sp, #-16]!
+    stp   x4,  x5,  [sp, #-16]!
+    stp   x6,  x7,  [sp, #-16]!
+    stp   x8,  x9,  [sp, #-16]!
+    stp   x10, x11, [sp, #-16]!
+    stp   x12, x13, [sp, #-16]!
+    stp   x14, x15, [sp, #-16]!
+    stp   x16, x17, [sp, #-16]!
+    stp   x18, x19, [sp, #-16]!
+
+    bl    handle_irq
+
+    ldp   x18, x19, [sp], #16
+    ldp   x16, x17, [sp], #16
+    ldp   x14, x15, [sp], #16
+    ldp   x12, x13, [sp], #16
+    ldp   x10, x11, [sp], #16
+    ldp   x8,  x9,  [sp], #16
+    ldp   x6,  x7,  [sp], #16
+    ldp   x4,  x5,  [sp], #16
+    ldp   x2,  x3,  [sp], #16
+    ldp   x0,  x1,  [sp], #16
+
+    bl  enable_irq
+    eret
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
 {  DEFAULT FIQ HANDLER STUB ON WEAK REFERENCE PROVIDE BY RPi-SmartStart API     }
@@ -327,27 +355,27 @@ b       \handler
 VectorTable:
         /* from current EL with sp_el0 */
         vector  _start                  /* Synchronous */
-        vector  hang                    /* IRQ */
-        vector  hang                    /* FIQ */
-        vector  hang                    /* SErrorStub */
+        vector  irq_handler_stub                    /* IRQ */
+        vector  irq_handler_stub                    /* FIQ */
+        vector  irq_handler_stub                    /* SErrorStub */
 
         /* from current EL with sp_elx, x != 0 */
-        vector  hang                     /* Synchronous */
+        vector  irq_handler_stub                     /* Synchronous */
         vector  irq_handler_stub /* IRQ */
-        vector  fiq_handler_stub /* FIQ */
-        vector  hang                     /* SErrorStub */
+        vector  irq_handler_stub /* FIQ */
+        vector  irq_handler_stub                     /* SErrorStub */
 
         /* from lower EL, target EL minus 1 is AArch64 */
-        vector  hang                    /* Synchronous */
-        vector  hang                    /* IRQ */
-        vector  hang                    /* FIQ */
-        vector  hang                    /* SErrorStub */
+        vector  irq_handler_stub                    /* Synchronous */
+        vector  irq_handler_stub                    /* IRQ */
+        vector  irq_handler_stub                    /* FIQ */
+        vector  irq_handler_stub                    /* SErrorStub */
 
         /* from lower EL, target EL minus 1 is AArch32 */
-        vector  hang                    /* Synchronous */
-        vector  hang                    /* IRQ */
-        vector  hang                    /* FIQ */
-        vector  hang                    /* SErrorStub */
+        vector  irq_handler_stub                    /* Synchronous */
+        vector  irq_handler_stub                    /* IRQ */
+        vector  irq_handler_stub                    /* FIQ */
+        vector  irq_handler_stub                    /* SErrorStub */
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
 {                       GLOBAL INTERRUPT CONTROL PROVIDE BY RPi-SmartStart API              }

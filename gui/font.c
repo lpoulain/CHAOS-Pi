@@ -986,6 +986,21 @@ uint get_font_height() {
     return selected_font->bottom - selected_font->top;
 }
 
+uint get_font_string_size(char *str) {
+    int len = strlen(str);
+
+    if (font_idx < 0) return 8 * len;
+
+    uint size = 0;
+
+    for (int i=0; i<len; i++) {
+        unsigned char *f = (unsigned char *)((*selected_font->bitmap)[(uint8)str[i]]);
+        size += f[34];
+    }
+
+    return size;
+}
+
 uint draw_font(unsigned char c, int x, int y) {
     if (font_idx >= 0) return draw_proportional_font(c, x, y);
 

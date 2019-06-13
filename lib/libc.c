@@ -65,6 +65,15 @@ void lmemset(uint *dest, uint val, uint len) {
     for (; len != 0; len--) *dest++ = val;
 }
 
+void clear_pages(void *dest, int nb_pages) {
+    uint64 *ptr = (uint64*)dest;
+
+    for (int i=0; i<nb_pages * 4096 / 8; i++) {
+        *ptr = 0x0;
+        ptr++;
+    }
+}
+
 int atoi(char *str) {
     int res = 0; // Initialize result
   
@@ -152,8 +161,12 @@ void _itoa_hex(uint64 nb, int nb_bytes, unsigned char *str) {
     *str = 0;
 }
 
-void itoa_hex(uint64 nb, unsigned char *str) {
+void itoa_hex(uint nb, unsigned char *str) {
     _itoa_hex(nb, 4, str);
+}
+
+void itoa_hex_64(uint64 nb, unsigned char *str) {
+    _itoa_hex(nb, 8, str);
 }
 
 void itoa_hex_0x(uint nb, unsigned char *str) {
@@ -211,6 +224,38 @@ void crash() {
 }
 
 /////////////////////////////////////////
+// Access of packed structures attributes
+/////////////////////////////////////////
+
+uint8 *get_ptr(void *mem, uint offset) {
+    return (uint8*)((uint8*)mem + offset);
+}
+
+uint8 get_uint8(void *mem, uint offset) {
+    uint64 addr = (uint64)mem + offset;
+    uint64 addr_aligned = addr & 0xFFFFFFFFFFFFFFF8;
+    uint64 nb = *(uint64*)addr_aligned;
+    nb = nb >> ((addr & 0x7) * 8);
+    return (uint8)nb; // *((uint8*)&nb);
+}
+
+uint16 get_uint16(void *mem, uint offset) {
+    uint64 addr = (uint64)mem + offset;
+    uint64 addr_aligned = addr & 0xFFFFFFFFFFFFFFF8;
+    uint64 nb = *(uint64*)addr_aligned;
+    nb = nb >> ((addr & 0x7) * 8);
+    return (uint16)nb; // *((uint16*)&nb);
+}
+
+uint32 get_uint32(void *mem, uint offset) {
+    uint64 addr = (uint64)mem + offset;
+    uint64 addr_aligned = addr & 0xFFFFFFFFFFFFFFF8;
+    uint64 nb = *(uint64*)addr_aligned;
+    nb = nb >> ((addr & 0x7) * 8);
+    return (uint32)nb; // *((uint32*)&nb);
+}
+
+/////////////////////////////////////////
 // Synchronization
 /////////////////////////////////////////
 
@@ -224,6 +269,11 @@ void wait_msec(unsigned int n)
     // calculate expire value for counter
     t+=((f/1000)*n)/1000;
     do{asm volatile ("mrs %0, cntpct_el0" : "=r"(r));}while(r<t);
+}
+
+void wait_cycles(unsigned int n)
+{
+    if(n) while(n--) { asm volatile("nop"); }
 }
 
 uint get_timer() {

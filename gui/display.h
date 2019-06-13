@@ -1,5 +1,5 @@
-#ifndef __FRAMEBUFFER_H
-#define __FRAMEBUFFER_H
+#ifndef __DISPLAY_H
+#define __DISPLAY_H
 
 #include "stdarg.h"
 
@@ -21,9 +21,9 @@ void draw_map_backup_screen(int x1_from, int y1_from, int x2_from, int y2_from, 
 void draw_backup_screen(int x_offset, int y_offset);
 void draw_restore_backup(int x_left, int y_bottom, int width, int height);
 
-void set_cursor(uint x, uint y);
-void cursor_cr();
-//void printf(const char *format, va_list args);
+void print_cr();
+void print_set_cursor(uint x, uint y);
+void printf(const char *format, ...);
 int draw_string(const char *str, uint x, uint y);
 int draw_int(int nb, int x, int y);
 

@@ -58,7 +58,7 @@ enum TouchStatus touchscreen_poll(void (*first_swipe)(int, int),
 								  void (*first_pinch)(int, int, int, int),
 								  void (*pinch)(int, int, int, int)) {
 
-	if (touchscreen_buffer == 0) return 0;
+	if (touchscreen_buffer == 0) return NOTOUCH;
 
 	enum TouchStatus status = NOTOUCH;
 
@@ -82,6 +82,8 @@ enum TouchStatus touchscreen_poll(void (*first_swipe)(int, int),
 
 		if (regs.num_points == 1) {
 			if (status == NOTOUCH) {
+				if (new_x1_px < 10 && new_y1_px >= 430) return EXIT;
+
 				first_swipe(new_x1_px, new_y1_px);
 				status = TAP;
 			}
