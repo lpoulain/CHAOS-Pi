@@ -234,8 +234,15 @@ void print_clr() {
 }
 
 void print_cr() {
+    int font_height = get_font_height();
+
     cursor_x = cursor_x_ref;
-    cursor_y += get_font_height();
+    cursor_y += font_height;
+
+    if (cursor_y + font_height >= SCREEN_HEIGHT) {
+        cursor_y = 0;
+        draw_rect(0, 0, 100, 479, 0);
+    }
 }
 
 void printf(const char *format, ...) {

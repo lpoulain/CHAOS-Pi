@@ -31,6 +31,7 @@ the pages themselves.
 
 #include "libc.h"
 #include "heap.h"
+#include "display.h"
 
 #define HEAP_MAGIC 0x9F4372
 #define NO_MORE_SPACE 0xFFFFFFFF
@@ -57,11 +58,10 @@ typedef struct {
 // For de
 
 typedef struct {
-    uint nb_pages:12;
-    uint name:18;       // For debugging purposes, the allocated page blocks can have a name
-    uint occupied:1;
-    uint active:1;
-    uint unused;
+    uint64 nb_pages:12;
+    uint64 name:50;       // For debugging purposes, the allocated page blocks can have a name
+    uint64 occupied:1;
+    uint64 active:1;
 } HeapPageIndex;
 
 #include "heap.h"
@@ -364,42 +364,42 @@ void heap_free_pages(uint ptr, Heap *h) {
         idx->active = 0;
     }
 }
-/*
-void heap_print(Window *win, Heap *h) {
+
+void heap_print(Heap *h) {
 
 //    printf("%x-%x / %x-%x (%d pages)\n", h->page_index_start, h->page_index_end, h->page_start, h->page_end, h->nb_pages);
-    printf_win(win, "Small objects (%x -> %x):\n", h->start, h->end);
+    printf("Small objects (%X -> %X):\n", h->start, h->end);
     HeapHeader *header = (HeapHeader*)h->start;
     HeapFooter *footer = (HeapFooter*)(h->start + sizeof(HeapHeader) + header->size);
     HeapHeader *candidate, *next_header;
 
     while (header->magic == HEAP_MAGIC) {
-        printf_win(win, "%x -> %x (%d bytes) - ", header, (uint)header + sizeof(HeapHeader) + header->size + sizeof(HeapFooter), header->size);
-        if (header->occupied) printf_win(win, "USED (%x)\n", header->origin); else printf_win(win, "free\n");
+        printf( "%X -> %X (%d bytes) - ", header, (uint64)header + sizeof(HeapHeader) + header->size + sizeof(HeapFooter), header->size);
+        if (header->occupied) printf("USED (%x)\n", header->origin); else printf("free\n");
 
-        header = (HeapHeader*)((uint)header + header->size + sizeof(HeapHeader) + sizeof(HeapFooter));
+        header = (HeapHeader*)((uint64)header + header->size + sizeof(HeapHeader) + sizeof(HeapFooter));
     }
 }
 
-void heap_print_pages(Window *win, Heap *h) {
-    printf_win(win, "Page blocks (%x -> %x):\n", h->page_start, h->page_end);
+void heap_print_pages(Heap *h) {
+    printf("Page blocks (%x -> %x):\n", h->page_start, h->page_end);
     HeapPageIndex *idx = (HeapPageIndex*)h->page_index_start;
-    uint start, end;
+    uint64 start, end;
 
-    while ((uint)idx < h->page_index_end) {
+    while ((uint64)idx < h->page_index_end) {
         if (idx->active == 1) {
-            start = h->page_start + (((uint)idx - h->page_index_start) / sizeof(HeapPageIndex)) * 0x1000;
+            start = h->page_start + (((uint64)idx - h->page_index_start) / sizeof(HeapPageIndex)) * 0x1000;
             end = start + 0x1000 * idx->nb_pages;
 
-            printf_win(win, "[%x -> %x] (%d pages)", start, end, idx->nb_pages);
-            if (idx->occupied == 1  ) printf_win(win, " %s (USED)\n", (uint)&rodata + idx->name);
-            else printf_win(win, " (free)\n");
+            printf("[%X -> %X] (%d pages)", start, end, idx->nb_pages);
+            if (idx->occupied == 1) printf(" %s (USED)\n", (void*)((uint64)(&_end) + (uint64)(idx->name)));
+            else printf(" (free)\n");
         }
 
         idx ++;
     }
 }
-*/
+
 void heap_free(void *ptr, Heap *h) {
     uint pointer = (uint64)ptr;
 

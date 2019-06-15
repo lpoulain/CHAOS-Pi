@@ -22,6 +22,8 @@ uint heap_free_space(Heap *h);
 void *malloc(uint);
 void free(void*);
 
+void heap_print(Heap *h);
+void heap_print_pages(Heap *h);
 void heap_check_for_corruption(Heap *h, const char *msg);
 
 #endif // KHEAP_H

@@ -5,7 +5,8 @@
 #include "font.h"
 #include "touchscreen.h"
 #include "mandelbrot.h"
-#include "disk.h"
+#include "apps.h"
+#include "widgets.h"
 
 void no_op2(int x, int y) { }
 void no_op4(int x, int y, int z, int t) { }
@@ -47,32 +48,18 @@ Application *app_register(char *name,
 	return app;
 }
 
-Application *app_mandelbrot;
-Application *app_filesystem;
-
-void filesystem_init() {
-	disk_load_mbr();
-
-    File *files = disk_ls(0);
-
-    for (int i=0; i<30; i++) {
-        if (files[i].filename[0] == 0) continue;
-
-        printf("%s\n", files[i].filename);
-
-        uart_puts("[");
-        uart_puts(files[i].filename);
-        uart_puts("]\n");
-    }
-}
+Application *app_mandelbrot, *app_filesystem, *app_kernelheap, *app_memory;
 
 void app_init() {
-	app_mandelbrot = app_register("Mandelbrot", mandelbrot_init, mandelbrot_first_swipe, mandelbrot_swipe, mandelbrot_first_pinch, mandelbrot_pinch, mandelbrot_process_touch_event);
-	app_filesystem = app_register("Filesystem", filesystem_init, no_op2, no_op2, no_op4, no_op4, no_op_status);
+	app_mandelbrot = app_register("Mandelbrot", mandelbrot_init, mandelbrot_first_touch, mandelbrot_swipe, mandelbrot_first_pinch, mandelbrot_pinch, mandelbrot_process_touch_event);
+	app_filesystem = app_register("Filesystem", app_filesystem_init, no_op2, no_op2, no_op4, no_op4, no_op_status);
+	app_kernelheap = app_register("Kernel Heap", app_kernelheap_init, no_op2, no_op2, no_op4, no_op4, no_op_status);
+	app_memory = app_register("Memory", app_memory_init, app_memory_first_touch, no_op2, no_op4, no_op4, app_memory_process_touch_event);
 }
 
 void app_launch(Application *app) {
 	screen_clear();
+	print_set_cursor(0, 0);
 	app->init();
 
 	while (1) {
@@ -92,110 +79,69 @@ void filesystem_callback() {
 	app_launch(app_filesystem);
 }
 
+void kernelheap_callback() {
+	app_launch(app_kernelheap);
+}
+
+void memory_callback() {
+	app_launch(app_memory);
+}
+
 ///////////////////////////////////////////////////////////////////////
 // Main Launcher
 ///////////////////////////////////////////////////////////////////////
 
-struct button_struct {
-	uint x;
-	uint y;
-	uint width;
-	uint height;
-	char *label;
-	void (*callback)();
-
-	struct button_struct *next;
-} button;
-
-typedef struct button_struct Button;
-
-Button *first_button = 0;
-Button *last_button = 0;
-
 uint screen_width, screen_height;
+UserInterface *ui;
 
 void screen_clear() {
 	draw_rect(0, 0, screen_width, screen_height, 0);
-}
-
-void screen_draw_button (Button *button) {
-	draw_frame(button->x, button->y, button->x + button->width - 1, button->y + button->height - 1, 0xFFFFFF);
-	draw_string(button->label, button->x + (button->width - get_font_string_size(button->label)) / 2, button->y + (button->height - get_font_height()) / 2);
-}
-
-void screen_add_button(char *label, void (*callback)()) {
-	Button *button = (Button*)kmalloc(sizeof(Button));
-
-	if (first_button == 0) {
-		first_button = button;
-		last_button = button;
-
-		button->y = 0;
-	} else {
-		last_button->next = button;
-		button->y = last_button->y + last_button->height + 5;
-	}
-
-	button->x = 0;
-	button->width = screen_width;
-	button->height = 80;
-	button->label = label;
-	button->callback = callback;
-	button->next = 0;
-	last_button = button;
 }
 
 int screen_pos_x = -1;
 int screen_pos_y = -1;
 
 void screen_first_swipe(int x, int y) {
+	draw_pixel(x, y, 0xFFFFFF);
 	screen_pos_x = x;
 	screen_pos_y = y;
+
+	Button *button = UI_find_button(ui, x, y);
+	if (button != NULL) UI_select_button(button);
 }
 
 void launcher_init_screen() {
 	screen_clear();
+	set_font(0);
 
-	Button *button = first_button;
-
-	while (button != 0) {
-		screen_draw_button(button);
-		button = button->next;
-	}
+	UI_draw(ui);
 }
 
 void launcher_init() {
 	screen_width = get_display_width();
 	screen_height = get_display_height();
 
+	ui = UI_init();
 	app_init();
 
-	screen_add_button("Mandelbrot", mandelbrot_callback);
-	screen_add_button("Filesystem", filesystem_callback);
+	UI_add_button(ui, "Mandelbrot", mandelbrot_callback);
+	UI_add_button(ui, "Filesystem", filesystem_callback);
+	UI_add_button(ui, "Kernel Heap", kernelheap_callback);
+	UI_add_button(ui, "Memory", memory_callback);
 
 	launcher_init_screen();
 
 	while (1) {
 		enum TouchStatus status = touchscreen_poll(screen_first_swipe, no_op2, no_op2, no_op4);
 
-		if (status == TAP) {
-			Button *button = first_button;
+		if (status == TAP || status == SWIPE) {
+			Button *button = UI_find_button(ui, screen_pos_x, screen_pos_y);
 
-			while (button != 0) {
-				if (screen_pos_x >= button->x &&
-					screen_pos_x < button->x + button->width &&
-					screen_pos_y >= button->y &&
-					screen_pos_y < button->y + button->height) {
-
-					button->callback();
-
-					launcher_init_screen();
-
-					break;
-				}
-
-				button = button->next;
+			if (button != NULL) {
+				button->callback();
+				launcher_init_screen();
 			}
+
 		}
 	}
 }

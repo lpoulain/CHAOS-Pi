@@ -22,6 +22,8 @@ struct ft5406_regs {
 		uint8_t pressure; /* Not supported */
 		uint8_t area;     /* Not supported */
 	} point[MAXIMUM_SUPPORTED_POINTS];
+
+	uint8_t notused;
 };
 
 void *touchscreen_buffer;
@@ -53,7 +55,7 @@ The touchscreen_poll() goal is to capture the touch movements, categorize them a
 
 When the user remove the finger(s) from the screen, the method returns
 */
-enum TouchStatus touchscreen_poll(void (*first_swipe)(int, int),
+enum TouchStatus touchscreen_poll(void (*first_touch)(int, int),
 								  void (*swipe)(int, int),
 								  void (*first_pinch)(int, int, int, int),
 								  void (*pinch)(int, int, int, int)) {
@@ -61,12 +63,29 @@ enum TouchStatus touchscreen_poll(void (*first_swipe)(int, int),
 	if (touchscreen_buffer == 0) return NOTOUCH;
 
 	enum TouchStatus status = NOTOUCH;
+	struct ft5406_regs regs;
+	uint64 *source, *target;
+	source = (uint64*)&regs;
+	target = (uint64*)touchscreen_buffer;
 
 	for (;;) {
-		struct ft5406_regs regs;
 
-		memcpy(&regs, touchscreen_buffer, sizeof(struct ft5406_regs));
-		actual_regs.num_points = 99;
+		wait_cycles(1000);
+
+		// Copy the value of the touchscreen buffer
+		source[0] = target[0];
+		source[1] = target[1];
+		source[2] = target[2];
+		source[3] = target[3];
+		source[4] = target[4];
+		source[5] = target[5];
+		source[6] = target[6];
+		source[7] = target[7];
+
+//		memcpy(&regs, touchscreen_buffer, sizeof(struct ft5406_regs));
+		if (actual_regs.num_points == 99) continue;
+
+//		actual_regs.num_points = 99;
 		if (regs.num_points == 99) continue;
 
 		if (regs.num_points == 0) {
@@ -74,17 +93,21 @@ enum TouchStatus touchscreen_poll(void (*first_swipe)(int, int),
 			if (status != NOTOUCH) {
 				return status;
 			}
+
+//			printf("[0] Status=%d\n", status);
 			continue;
 		}
 
 		int new_x1_px = (((int) regs.point[0].xh & 0xf) << 8) + regs.point[0].xl;
 		int new_y1_px = (((int) regs.point[0].yh & 0xf) << 8) + regs.point[0].yl;
 
+//printf("[%d] Status=%d, Ptr=%d %d\n", regs.num_points, status, new_x1_px, new_y1_px);
+
 		if (regs.num_points == 1) {
 			if (status == NOTOUCH) {
 				if (new_x1_px < 10 && new_y1_px >= 430) return EXIT;
 
-				first_swipe(new_x1_px, new_y1_px);
+				first_touch(new_x1_px, new_y1_px);
 				status = TAP;
 			}
 			else if (status == SWIPE || status == TAP) {

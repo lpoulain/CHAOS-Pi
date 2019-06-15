@@ -112,10 +112,10 @@ SECTIONS
         __stack_end_core3__ = .;  
     }
 
-    .debug_str : { __debug__str = .; *(.debug_str) }
+    .debug_str : { . = ALIGN(4); __debug_str__ = .; *(.debug_str .debug_str.*) }
     .debug_loc : { *(.debug_loc) }
     .debug_abbrev : { *(.debug_abbrev) }
-    .debug_info : { *(.debug_info) }
+    .debug_info : { . = ALIGN(4); __debug_info__ = .; *(.debug_info .debug_info.*) }
     .debug_macinfo : { *(.debug_macinfo) }
     .debug_pubnames : { *(.debug_pubnames) }
     .debug_pubtypes : { *(.debug_pubtypes) }

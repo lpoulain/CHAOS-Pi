@@ -114,7 +114,7 @@ void mandelbrot_pinch(int x1_px, int y1_px, int x2_px, int y2_px) {
 }
 
 
-void mandelbrot_first_swipe(int x_px, int y_px) {
+void mandelbrot_first_touch(int x_px, int y_px) {
 	ref_x1_px = x_px;
 	ref_y1_px = y_px;
 }
@@ -126,10 +126,11 @@ void mandelbrot_swipe(int x_px, int y_px) {
 	// Left hand side: change the number of iterations
 	if (new_x1_px < 50 && ref_x1_px < 50) {
 		max_iter += (ref_y1_px - new_y1_px);
+        if (max_iter < 100) max_iter = 100;
 
 		draw_restore_backup(100, 5, 300, 20);
         int px = draw_string("Iterations: ", 100, 5);
-        draw_int(max_iter, px, 5);
+        draw_int(max_iter, 100 + px, 5);
 		return;
 	}
 
@@ -242,7 +243,7 @@ void mandelbrot_tap() {
 
 void mandelbrot_init() {
     mandelbrot_reset();
-    set_font(1);
+    set_font(0);
 
     draw_mandelbrot_multicore();
 }
@@ -262,33 +263,5 @@ void mandelbrot_process_touch_event(enum TouchStatus status) {
             break;
         default:
             break;
-    }
-}
-
-// Main function of the Mandelbrot app
-void draw_mandelbrot() {
-    set_font(1);
-	mandelbrot_init();
-
-	draw_mandelbrot_multicore();
-
-    while (1) {
-        enum TouchStatus status = touchscreen_poll(mandelbrot_first_swipe, mandelbrot_swipe, mandelbrot_first_pinch, mandelbrot_pinch);
-
-        switch(status) {
-            case TAP:
-                mandelbrot_tap();
-                break;
-        	case SWIPE:
-        		mandelbrot_move_coordinates();
-        		draw_mandelbrot_multicore();
-        		break;
-        	case PINCH:
-        		mandelbrot_zoom();
-        		draw_mandelbrot_multicore();
-        		break;
-        	default:
-        		break;
-        }
     }
 }
