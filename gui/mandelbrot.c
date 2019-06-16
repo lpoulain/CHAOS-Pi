@@ -4,6 +4,7 @@
 #include "touchscreen.h"
 #include "math.h"
 #include "font.h"
+#include "widgets.h"
 
 /*
 void bounce(int nb) {
@@ -241,7 +242,9 @@ void mandelbrot_tap() {
     }
 }
 
-void mandelbrot_init() {
+void mandelbrot_load(UserInterface *ui) { }
+
+void mandelbrot_wake_up(UserInterface *ui) {
     mandelbrot_reset();
     set_font(0);
 

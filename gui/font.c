@@ -972,13 +972,17 @@ Font *get_font(uint8 index) {
 int font_idx = -1;
 Font *selected_font;
 
-void set_font(int idx) {
+int set_font(int idx) {
+    int old_font_idx = font_idx;
+
     font_idx = idx;
     if (idx >= 0 && idx < 6) {
         selected_font = &fonts[idx];
     } else {
         selected_font = &fonts[0];
     }
+
+    return old_font_idx;
 }
 
 uint get_font_height() {

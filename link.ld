@@ -19,6 +19,12 @@ SECTIONS
                  __text_start__ = .;            /* Label in case we want address of text section start */
                 *(.text .text.*)
                  __text_end__ = .;              /* Label in case we want address of text section end */
+
+                 . = ALIGN(4);
+                __debug_str__ = .;
+                *(.debug_str .debug_str.*)
+
+                . = ALIGN(4); __debug_info__ = .; *(.debug_info .debug_info.*)
         }
 
         /* 
@@ -112,7 +118,7 @@ SECTIONS
         __stack_end_core3__ = .;  
     }
 
-    .debug_str : { . = ALIGN(4); __debug_str__ = .; *(.debug_str .debug_str.*) }
+/*    .debug_str : { . = ALIGN(4); __debug_str__ = .; *(.debug_str .debug_str.*) }
     .debug_loc : { *(.debug_loc) }
     .debug_abbrev : { *(.debug_abbrev) }
     .debug_info : { . = ALIGN(4); __debug_info__ = .; *(.debug_info .debug_info.*) }
@@ -122,7 +128,7 @@ SECTIONS
     .debug_line : { *(.debug_line) }
     .debug_aranges : { *(.debug_aranges) }
     .debug_frame : { *(.debug_frame) }
-
+*/
         .heap : {
         . = ALIGN(4);
         __heap_start__ = .;                     /* Label in case we want address of heap section start */

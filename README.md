@@ -1,10 +1,10 @@
 # CHAOS (CHeers, Another Operating System) - Raspberry Pi version
 
-CHAOS Pi is a simple, 64-bit operating system for the Raspberry Pi.
+CHAOS Pi is a simple, 64-bit operating system for the Raspberry Pi currently in development.
 
 ![](CHAOS.png)
 
-Even though part of it run in Qemu, it has specifically been written for the following hardware (I purchased a [whole touchscreen kit](https://www.amazon.com/gp/product/B07DTZ5LC8/ref=ppx_yo_dt_b_asin_title_o02_s00?ie=UTF8&psc=1)):
+Even though a large part can be run in QEMU, CHAOS has specifically been written for the following hardware (I purchased a [Touchscreen Starter Kit](https://www.amazon.com/gp/product/B07DTZ5LC8/ref=ppx_yo_dt_b_asin_title_o02_s00?ie=UTF8&psc=1)):
 
 - Raspberry Pi 3 Model B+
 - Official Raspberry Pi 7" Touchscreen
@@ -13,13 +13,18 @@ Even though part of it run in Qemu, it has specifically been written for the fol
 
 CHAOS right now offers minimum functionalities:
 
+- Touchscreen support, whether single tap, swiping or pinching in and out (an UART keyboard input is used when QEMU is used)
 - A heap management system (`malloc()` and `free()`, pages allocation)
 - Fixed and proportionally-spaced fonts
 - Partial FAT32 filesystem support
 - Handling of CPU exceptions (and displays debbuging information in case a crash occurs)
-- A rudimentary application launcher, allowing to start apps which can interact with the touchscreen. Right now two apps are available:
+- A basic Application Launcher, allowing to start apps which can interact with the touchscreen. Right now four apps are available:
     - A Mandelbrot app (see below)
     - A Filesystem app which looks at the FAT32 partitions on the SD card and displays the content of the first partition's root directory
+    - A Kernel Heap app, which allows to examine the system heap
+    - A Memory app, which allows to examine areas in the system's memory
+
+Pressing the lower left corner (or the Esc key if using QEMU) will switch back to the App Launcher.
 
 ## Mandelbrot App
 

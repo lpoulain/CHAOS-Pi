@@ -10,6 +10,10 @@ extern volatile unsigned int mbox[36];
 #define RPI_FIRMWARE_FRAMEBUFFER_GET_TOUCHBUF 0x0004000f
 #define RPI_FIRMWARE_FRAMEBUFFER_SET_TOUCHBUF 0x0004801f
 
+void no_op2(int x, int y) { }
+void no_op4(int x, int y, int z, int t) { }
+void no_op_status(enum TouchStatus status) { }
+
 struct ft5406_regs {
 	uint8_t device_mode;
 	uint8_t gesture_id;
@@ -60,7 +64,7 @@ enum TouchStatus touchscreen_poll(void (*first_touch)(int, int),
 								  void (*first_pinch)(int, int, int, int),
 								  void (*pinch)(int, int, int, int)) {
 
-	if (touchscreen_buffer == 0) return NOTOUCH;
+	if (touchscreen_buffer == NULL) return NOTOUCH;
 
 	enum TouchStatus status = NOTOUCH;
 	struct ft5406_regs regs;

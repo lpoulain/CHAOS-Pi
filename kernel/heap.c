@@ -370,8 +370,7 @@ void heap_print(Heap *h) {
 //    printf("%x-%x / %x-%x (%d pages)\n", h->page_index_start, h->page_index_end, h->page_start, h->page_end, h->nb_pages);
     printf("Small objects (%X -> %X):\n", h->start, h->end);
     HeapHeader *header = (HeapHeader*)h->start;
-    HeapFooter *footer = (HeapFooter*)(h->start + sizeof(HeapHeader) + header->size);
-    HeapHeader *candidate, *next_header;
+//    HeapFooter *footer = (HeapFooter*)(h->start + sizeof(HeapHeader) + header->size);
 
     while (header->magic == HEAP_MAGIC) {
         printf( "%X -> %X (%d bytes) - ", header, (uint64)header + sizeof(HeapHeader) + header->size + sizeof(HeapFooter), header->size);

@@ -26,5 +26,6 @@ void print_set_cursor(uint x, uint y);
 void printf(const char *format, ...);
 int draw_string(const char *str, uint x, uint y);
 int draw_int(int nb, int x, int y);
+uint draw_char(char c, int x, int y);
 
 #endif

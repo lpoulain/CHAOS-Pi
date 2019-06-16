@@ -20,7 +20,7 @@ typedef struct {
 
 uint draw_font(unsigned char c, int x, int y);
 uint draw_proportional_font(unsigned char c, int x, int y);
-void set_font(int idx);
+int set_font(int idx);
 uint get_font_height();
 uint get_font_string_size(char *str);
 
