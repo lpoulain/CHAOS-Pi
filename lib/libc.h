@@ -27,6 +27,7 @@ extern void *get_sp();
 #define max(a, b) (((a) > (b)) ? (a) : (b))
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 #define NULL 0
+int abs(int i);
 
 char *strcpy(char *dest, const char *src);
 char *strncpy(char *dest, const char *src, int n);

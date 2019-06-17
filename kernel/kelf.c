@@ -21,17 +21,17 @@ extern uint __debug_abbrev_end__;
 Elf *kernel_ELF() {
 	Elf *elf = (Elf*)kmalloc(sizeof(Elf));
 
-	elf->section[ELF_SECTION_DEBUG_INFO].start = &__debug_info__;
-	elf->section[ELF_SECTION_DEBUG_INFO].end = &__debug_info_end__;
+	elf->section[ELF_SECTION_DEBUG_INFO].start = (uint8*)&__debug_info__;
+	elf->section[ELF_SECTION_DEBUG_INFO].end = (uint8*)&__debug_info_end__;
 
-	elf->section[ELF_SECTION_DEBUG_LINE].start = &__debug_line__;
-	elf->section[ELF_SECTION_DEBUG_LINE].end = &__debug_line_end__;
+	elf->section[ELF_SECTION_DEBUG_LINE].start = (uint8*)&__debug_line__;
+	elf->section[ELF_SECTION_DEBUG_LINE].end = (uint8*)&__debug_line_end__;
 
-	elf->section[ELF_SECTION_DEBUG_STR].start = &__debug_str__;
-	elf->section[ELF_SECTION_DEBUG_STR].end = &__debug_str_end__;
+	elf->section[ELF_SECTION_DEBUG_STR].start = (uint8*)&__debug_str__;
+	elf->section[ELF_SECTION_DEBUG_STR].end = (uint8*)&__debug_str_end__;
 
-	elf->section[ELF_SECTION_DEBUG_ABBREV].start = &__debug_abbrev__;
-	elf->section[ELF_SECTION_DEBUG_ABBREV].end = &__debug_abbrev_end__;
+	elf->section[ELF_SECTION_DEBUG_ABBREV].start = (uint8*)&__debug_abbrev__;
+	elf->section[ELF_SECTION_DEBUG_ABBREV].end = (uint8*)&__debug_abbrev_end__;
 
 	return elf;
 }

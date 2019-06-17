@@ -72,6 +72,8 @@ enum TouchStatus touchscreen_poll(void (*first_touch)(int, int),
 	source = (uint64*)&regs;
 	target = (uint64*)touchscreen_buffer;
 
+	int first_x1_px = -15, first_y1_px = -15;
+
 	for (;;) {
 
 		wait_cycles(1000);
@@ -111,10 +113,14 @@ enum TouchStatus touchscreen_poll(void (*first_touch)(int, int),
 			if (status == NOTOUCH) {
 				if (new_x1_px < 10 && new_y1_px >= 430) return EXIT;
 
+				first_x1_px = new_x1_px;
+				first_y1_px = new_y1_px;
+
 				first_touch(new_x1_px, new_y1_px);
 				status = TAP;
 			}
-			else if (status == SWIPE || status == TAP) {
+			else if (status == SWIPE || (status == TAP &&
+					 (abs(new_x1_px - first_x1_px) > 3 || abs(new_y1_px - first_y1_px) > 3))) {
 				swipe(new_x1_px, new_y1_px);
 				status = SWIPE;
 			}

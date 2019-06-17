@@ -15,7 +15,7 @@
 
 #define APP_FLAG_LOADED		1
 
-void screen_clear();
+void draw_wallpaper();
 
 typedef struct {
 	char *name;
@@ -66,7 +66,6 @@ void app_init() {
 }
 
 void app_launch(Application *app) {
-//	screen_clear();
 	draw_wallpaper();
 
 	print_set_cursor(0, 0);
@@ -133,12 +132,12 @@ void screen_first_touch(int x, int y) {
 }
 
 void launcher_init_screen() {
-//	screen_clear();
 	draw_wallpaper();
 
 	set_font(0);
 
 	UI_draw(launcher_ui);
+    draw_string("Welcome to CHAOS!", 350, 460);
 }
 
 void launcher_init() {
@@ -160,16 +159,4 @@ void launcher_init() {
 		if (status == TAP || status == SWIPE)
 			launcher_init_screen();
 	}
-/*		enum TouchStatus status = touchscreen_poll(screen_first_touch, no_op2, no_op2, no_op4);
-
-		if (status == TAP || status == SWIPE) {
-			Button *button = UI_find_button(ui, screen_pos_x, screen_pos_y);
-
-			if (button != NULL) {
-				button->callback();
-				launcher_init_screen();
-			}
-
-		}
-	}*/
 }
