@@ -94,7 +94,7 @@ enum TouchStatus UI_handle_event(UserInterface *ui) {
 
 void UI_draw_button(Button *button) {
 	draw_frame(button->x, button->y, button->x + button->width - 1, button->y + button->height - 1, 0xFFFFFF);
-	draw_rect(button->x + 1, button->y + 1, button->x + button->width - 2, button->y + button->height - 2, 0);
+	draw_rect(button->x + 1, button->y + 1, button->x + button->width - 2, button->y + button->height - 2, 0x222222);
 	draw_string(button->label, button->x + (button->width - get_font_string_size(button->label)) / 2, button->y + (button->height - get_font_height()) / 2);
 
 	if (is_hardware_emulated())
@@ -141,14 +141,14 @@ void UI_add_button(UserInterface *ui, char *label, void (*callback)(), char hotk
 	if (ui->first_button == 0) {
 		ui->first_button = button;
 
-		button->y = 0;
+		button->y = 10;
 	} else {
 		ui->last_button->next = button;
-		button->y = ui->last_button->y + ui->last_button->height + 5;
+		button->y = ui->last_button->y + ui->last_button->height + 10;
 	}
 
-	button->x = 0;
-	button->width = screen_width;
+	button->x = 10;
+	button->width = screen_width - 20;
 	button->height = 80;
 	button->label = label;
 	button->callback = callback;

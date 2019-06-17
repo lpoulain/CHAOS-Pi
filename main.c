@@ -8,6 +8,9 @@
 #include "kheap.h"
 #include "font.h"
 #include "launcher.h"
+#include "debug_line.h"
+#include "elf.h"
+#include "debug.h"
 
 extern void scheduler();
 extern uint *buffer;

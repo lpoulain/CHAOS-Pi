@@ -66,7 +66,9 @@ void app_init() {
 }
 
 void app_launch(Application *app) {
-	screen_clear();
+//	screen_clear();
+	draw_wallpaper();
+
 	print_set_cursor(0, 0);
 
 	if (!(app->flags & APP_FLAG_LOADED)) {
@@ -131,7 +133,9 @@ void screen_first_touch(int x, int y) {
 }
 
 void launcher_init_screen() {
-	screen_clear();
+//	screen_clear();
+	draw_wallpaper();
+
 	set_font(0);
 
 	UI_draw(launcher_ui);

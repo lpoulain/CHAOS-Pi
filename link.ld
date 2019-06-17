@@ -23,8 +23,22 @@ SECTIONS
                  . = ALIGN(4);
                 __debug_str__ = .;
                 *(.debug_str .debug_str.*)
+                __debug_str_end__ = .;
 
-                . = ALIGN(4); __debug_info__ = .; *(.debug_info .debug_info.*)
+                 . = ALIGN(4);
+                __debug_line__ = .;
+                *(.debug_line .debug_line.*)
+                __debug_line_end__ = .;
+
+                 . = ALIGN(4);
+                __debug_info__ = .;
+                *(.debug_info .debug_info.*)
+                __debug_info_end__ = .;
+
+                . = ALIGN(4);
+                __debug_abbrev__ = .;
+                *(.debug_abbrev .debug_abbrev.*)
+                __debug_abbrev_end__ = .;
         }
 
         /* 
