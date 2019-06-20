@@ -7,6 +7,7 @@
 #include "touchscreen.h"
 
 extern Heap kheap;
+extern uint *buffer;
 
 extern uint __text_start__;
 extern uint __rodata_start__;
@@ -128,6 +129,7 @@ void app_memory_wake_up(UserInterface *ui) {
 	printf("Debug Line:   0x%X\n", &__debug_line__);
 	printf("Debug Info:   0x%X\n", &__debug_info__);
 	printf("Debug Abbrev: 0x%X\n", &__debug_abbrev__);
+	printf("Display:      0x%X\n", buffer);
 
 	set_font(0);
 	UI_draw(ui);

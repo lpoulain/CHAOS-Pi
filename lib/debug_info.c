@@ -142,7 +142,7 @@ void debug_info_load(Elf *elf) {
 
 		// Finds the schema address in mem
 		// for each type of DIE
-		unsigned char *schema = elf->section[ELF_SECTION_DEBUG_ABBREV].start + header->abbrev_offset;
+		unsigned char *schema = header->abbrev_offset;
 		CHECK_VALID_SCHEMA(schema)
 		DIE_schema[1] = schema;
 		if (is_debug()) printf("Schema %d: %x (offset %x)\n", 1, schema, schema - elf->section[ELF_SECTION_DEBUG_ABBREV].start);

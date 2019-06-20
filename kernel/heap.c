@@ -58,8 +58,8 @@ typedef struct {
 // For de
 
 typedef struct {
-    uint64 nb_pages:12;
-    uint64 name:50;       // For debugging purposes, the allocated page blocks can have a name
+    uint64 nb_pages:22;
+    uint64 name:40;       // For debugging purposes, the allocated page blocks can have a name
     uint64 occupied:1;
     uint64 active:1;
 } HeapPageIndex;

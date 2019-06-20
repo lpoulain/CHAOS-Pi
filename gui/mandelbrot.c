@@ -92,7 +92,19 @@ void set_proportional_rect(int *x1_px, int *y1_px, int *x2_px, int *y2_px) {
 		frame_delta = (new_value - frame_width) / 2;
 		*x1_px = *x1_px - frame_delta;
 		*x2_px = *x2_px - frame_delta;
-	}	
+	}
+
+    if (*x2_px < *x1_px) {
+        new_value = *x1_px;
+        *x1_px = *x2_px;
+        *x2_px = new_value;
+    }
+
+    if (*y2_px < *y1_px) {
+        new_value = *y1_px;
+        *y1_px = *y2_px;
+        *y2_px = new_value;
+    }
 }
 
 void mandelbrot_first_pinch(int x1_px, int y1_px, int x2_px, int y2_px) {
@@ -113,7 +125,6 @@ void mandelbrot_pinch(int x1_px, int y1_px, int x2_px, int y2_px) {
 	set_proportional_rect(&new_x1_px, &new_y1_px, &new_x2_px, &new_y2_px);
 	draw_map_backup_screen(ref_x1_px, ref_y1_px, ref_x2_px, ref_y2_px, new_x1_px, new_y1_px, new_x2_px, new_y2_px);
 }
-
 
 void mandelbrot_first_touch(int x_px, int y_px) {
 	ref_x1_px = x_px;

@@ -48,9 +48,9 @@ void kernel_main()
     uart_hex(mbox_get(6));
     uart_puts("\n");
  
-	mbox_add4(MBOX_GET_MAC, 0, 8, 0, 0);
+	mbox_add4(MBOX_GET_VC_MEMORY, 0, 8, 0, 0);
 	mbox_send();
-	uart_puts("MAC address: ");
+	uart_puts("VC address: ");
     mac = mbox_get(6);
     uart_hex(mac);
     uart_hex(mbox_get(5));
@@ -68,6 +68,11 @@ void kernel_main()
 
     set_font(0);
     draw_string("Welcome to CHAOS!", 350, 460);
+
+    switch_debug();
+    set_font(-1);
+    Elf *kelf = kernel_ELF();
+    debug_info_load(kelf);
 
     launcher_init();
 
