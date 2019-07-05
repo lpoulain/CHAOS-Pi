@@ -11,15 +11,29 @@
 #include "debug_line.h"
 #include "elf.h"
 #include "debug.h"
+#include "syscall.h"
+#include "display.h"
 
 extern void scheduler();
 extern uint *buffer;
 
 void touchscreen_init();
+void mmu_init();
+
 extern unsigned char _end;
 
 uint mac;
 uint8 is_hardware_emulated() { return (mac != 0); }
+
+void xSchedule(void)
+{
+
+}
+
+void xTickISR(void)
+{
+
+}
 
 void kernel_main()
 {
@@ -52,7 +66,7 @@ void kernel_main()
 	mbox_send();
 	uart_puts("VC address: ");
     mac = mbox_get(6);
-    uart_hex(mac);
+//    uart_hex(mac);
     uart_hex(mbox_get(5));
     uart_puts("\n");
 
@@ -69,15 +83,18 @@ void kernel_main()
     set_font(0);
     draw_string("Welcome to CHAOS!", 350, 460);
 
-    switch_debug();
+/*    switch_debug();
     set_font(-1);
     Elf *kelf = kernel_ELF();
     debug_info_load(kelf);
+*/
 
-    launcher_init();
+    mmu_init();
+   
+   launcher_init();
 
 	while (1) {
-        char c = uart_getc();
-        uart_putc(c);
+//        char c = uart_getc();
+//        uart_putc(c);
 	}
 }

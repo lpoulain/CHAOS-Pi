@@ -1,5 +1,6 @@
 #include "libc.h"
 #include "mbox.h"
+#include "stdarg.h"
 
 #define MMIO_BASE       0x3F000000
 
@@ -109,6 +110,12 @@ void uart_puts(char *s) {
     }
 }
 
+void uart_puts_n(char *s, int n) {
+    for (int i=0; i<n; i++) {
+        uart_putc(s[i]);
+    }
+}
+
 /**
  * Display a binary value in hexadecimal
  */
@@ -146,6 +153,12 @@ void uart_hex_long(uint64 d) {
         n+=n>9?0x37:0x30;
         uart_putc(n);
     }
+}
+
+void uart_int(int nb) {
+    char tmp[12];
+    itoa(nb, (char *)&tmp);
+    uart_puts(tmp);
 }
 
 void uart_dump_mem(void *ptr, int nb_bytes) {
@@ -189,6 +202,71 @@ void uart_dump_mem(void *ptr, int nb_bytes) {
     }
 }
 
+void uart_printf(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    int x = 0, y;
+    char *str;
+    char tmp[16], ch;
+    uint ip;
+    uint8 *ip_ptr;
+
+    for (; *format != 0; ++format) {
+        if (*format == '\n') {
+            uart_putc('\n');
+        } else if (*format == '%') {
+            ++format;
+            switch(*format) {
+                case 'd':
+                    uart_int(va_arg( args, int ));
+                    break;
+                case 's':
+                    str = (char*)(uint64)va_arg( args, int );
+                    x = 0;
+                    y = 0;
+                    ch = str[y];
+                    while (ch != 0) {
+                        while (ch != 0 && ch != 0x0A) ch = str[++y];
+  
+                        if (ch == 0x0A) {
+                            uart_puts_n(str + x, y - x);
+
+                            x = ++y;
+//                            y = x;
+                            ch = str[y];
+                            uart_putc('\n');
+                        } else {
+                            uart_puts(str + x);
+                        }
+                    }
+                    break;
+                case 'x':
+                    itoa_hex(va_arg(args, uint), (unsigned char*)&tmp);
+                    uart_puts(tmp);
+                    break;
+                case 'X':
+                    itoa_hex_64(va_arg(args, uint64), (unsigned char*)&tmp);
+                    uart_puts(tmp);
+                    break;
+                case 'i':
+                    ip = va_arg(args, unsigned int);
+                    ip_ptr = (uint8*)&ip;
+                    uart_int(ip_ptr[0]);
+                    uart_putc('.');
+                    uart_int(ip_ptr[1]);
+                    uart_putc('.');
+                    uart_int(ip_ptr[2]);
+                    uart_putc('.');
+                    uart_int(ip_ptr[3]);
+                    break;
+            }
+        }
+        else {
+            uart_putc(*format);
+        }
+    }
+}
 
 void uart_print_current_stack() {
     uint64 *stack_end;

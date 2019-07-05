@@ -6,6 +6,10 @@
 #define MMIO_BASE       	0x3F000000
 #define IRQ_PENDING_1		(MMIO_BASE+0x0000B204)
 
+extern unsigned char __EL1_stack_core0;
+
+void syscall_handler(uint call_nb, uint64 arg1, uint64 arg2);
+
 const char *entry_error_messages[] = {
 	"SYNC_INVALID_EL1t",
 	"IRQ_INVALID_EL1t",		
@@ -80,6 +84,17 @@ const char *get_ESR_extra_message(uint esr) {
 
 void show_invalid_entry_message(uint type, uint64 esr, uint64 address, uint64 spsr, uint64 far)
 {
+	if ((esr & 0xFF000000) == 0x0000000056000000) {
+
+		uint32 call_nb = esr & 0xFFFF;
+
+		char **arg1 = (char**)(&esr + 1);
+		char **arg2 = (char**)(&esr + 2);
+//		uart_printf("System call %d 0x%X 0x%X\n", call_nb, *arg1, *arg2);
+		syscall_handler(call_nb, (uint64)*arg1, (uint64)*arg2);
+		return;
+	} else {
+
 	uart_puts("******************\nException: ");
 	uart_puts(get_interrupt_type(type));
 	uart_puts("\nESR:  0x");
@@ -97,13 +112,29 @@ void show_invalid_entry_message(uint type, uint64 esr, uint64 address, uint64 sp
 
 //	uart_dump_mem(get_sp(), 128);
 
-	print_set_cursor(0, 438);
+	print_set_cursor(0, 430);
 	set_font(-1);
 	printf("Exception: %s\n", get_interrupt_type(type));
 	printf("ESR:  0x%X (%s%s)\n", esr, get_ESR_message(esr), get_ESR_extra_message(esr));
 	printf("ELR:  0x%X (address of the crash)\n", address);
 	printf("SPSR: 0x%X (Saved Program Status Register)\n", spsr);
-	printf("FAR:  0x%X (problematic address)", far);
+	printf("FAR:  0x%X (problematic address)\n", far);
+  }
+for (;;);
+/*	if ((esr & 0xFF000000) == 0x0000000056000000) {
+		uint32 arg = esr & 0xFFFF;
+		printf("Argument: %d", arg);
+		uart_puts("Argument: 0x");
+		uart_hex(arg);
+		uart_putc('\n');
+
+		uart_dump_mem(&__EL1_stack_core0 - 512, 512);
+
+		char **sys_arg = (char**)(&esr + 1);
+		uart_puts(*sys_arg);
+
+		asm volatile("eret");
+	}*/
 }
 
 void handle_irq(void)

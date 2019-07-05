@@ -2,7 +2,7 @@
 #include "elf.h"
 #include "debug_line.h"
 #include "dwarf.h"
-#include "display.h"
+#include "uart.h"
 
 typedef struct __attribute__((packed)) {
 	uint length;
@@ -69,7 +69,7 @@ int debug_line_get_path(DebugLineHeader *header, void *ptr, StackFrame *frame, E
 					break;
 				// DW_LNE_define_file
 				case 3:
-					printf("Extended opcode not implemented %d\n", opcode);
+					uart_printf("Extended opcode not implemented %d\n", opcode);
 					break;
 				// DW_LNE_set_discriminator
 				case 4:
@@ -147,7 +147,7 @@ int debug_line_get_path(DebugLineHeader *header, void *ptr, StackFrame *frame, E
 			opcode += 1 + nb_bytes;
 		}
 
-		if (is_debug()) printf("[%x][%x] Opcode %d => Address=%x, line=%d       \n", addr_opcode, ((unsigned char*)addr_opcode - elf->section[ELF_SECTION_DEBUG_LINE].start), old_opcode, dwarf_address, dwarf_line);
+		if (is_debug()) uart_printf("[%x][%x] Opcode %d => Address=%x, line=%d       \n", addr_opcode, ((unsigned char*)addr_opcode - elf->section[ELF_SECTION_DEBUG_LINE].start), old_opcode, dwarf_address, dwarf_line);
 	}
 
 	if (opcode >= end) return 0;
@@ -165,7 +165,7 @@ int debug_line_get_path(DebugLineHeader *header, void *ptr, StackFrame *frame, E
 		path += strlen(path) + 1;
 	}
 //	debug(path);
-//	printf("%s/%s line %d       ", path, files, dwarf_line);
+//	uart_printf("%s/%s line %d       ", path, files, dwarf_line);
 	frame->filename = (char*)files;
 	frame->path = path;
 	frame->line_number = dwarf_line;

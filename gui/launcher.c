@@ -56,13 +56,14 @@ Application *app_register(char *name,
 	return app;
 }
 
-Application *app_mandelbrot, *app_filesystem, *app_kernelheap, *app_memory;
+Application *app_mandelbrot, *app_filesystem, *app_kernelheap, *app_memory, *app_fern;
 
 void app_init() {
 	app_mandelbrot = app_register("Mandelbrot", mandelbrot_load, mandelbrot_wake_up, mandelbrot_first_touch, mandelbrot_swipe, mandelbrot_first_pinch, mandelbrot_pinch, mandelbrot_process_touch_event);
 	app_filesystem = app_register("Filesystem", app_filesystem_load, app_filesystem_wake_up, no_op2, no_op2, no_op4, no_op4, no_op_status);
 	app_kernelheap = app_register("Kernel Heap", app_kernelheap_load, app_kernelheap_wake_up, no_op2, no_op2, no_op4, no_op4, no_op_status);
 	app_memory = app_register("Memory", app_memory_load, app_memory_wake_up, no_op2, no_op2, no_op4, no_op4, no_op_status);
+	app_fern = app_register("Fern (user mode)", app_fern_load, app_fern_wake_up, no_op2, no_op2, no_op4, no_op4, no_op_status);
 }
 
 void app_launch(Application *app) {
@@ -108,6 +109,10 @@ void memory_callback() {
 	app_launch(app_memory);
 }
 
+void fern_callback() {
+	app_launch(app_fern);
+}
+
 ///////////////////////////////////////////////////////////////////////
 // Main Launcher
 ///////////////////////////////////////////////////////////////////////
@@ -151,6 +156,7 @@ void launcher_init() {
 	UI_add_button(launcher_ui, "Filesystem", filesystem_callback, '2');
 	UI_add_button(launcher_ui, "Kernel Heap", kernelheap_callback, '3');
 	UI_add_button(launcher_ui, "Memory", memory_callback, '4');
+	UI_add_button(launcher_ui, "Fern (User Mode)", fern_callback, '5');
 
 	launcher_init_screen();
 

@@ -32,6 +32,17 @@
 	b	err_hang
 	.endm
 
+	.macro handle_el0 type
+	kernel_entry
+	mov	x0, #\type
+	mrs	x1, esr_el1
+	mrs	x2, elr_el1
+	mrs x3, spsr_el1
+    mrs x4, far_el1
+	bl	show_invalid_entry_message
+	kernel_exit
+	.endm
+
 	.macro	ventry	label
 	.align	7
 	b	\label
@@ -127,16 +138,16 @@ error_invalid_el1h:
 	handle_invalid_entry  ERROR_INVALID_EL1h
 
 sync_invalid_el0_64:
-	handle_invalid_entry  SYNC_INVALID_EL0_64
+	handle_el0  SYNC_INVALID_EL0_64
 
 irq_invalid_el0_64:
-	handle_invalid_entry  IRQ_INVALID_EL0_64
+	handle_el0  IRQ_INVALID_EL0_64
 
 fiq_invalid_el0_64:
-	handle_invalid_entry  FIQ_INVALID_EL0_64
+	handle_el0  FIQ_INVALID_EL0_64
 
 error_invalid_el0_64:
-	handle_invalid_entry  ERROR_INVALID_EL0_64
+	handle_el0  ERROR_INVALID_EL0_64
 
 sync_invalid_el0_32:
 	handle_invalid_entry  SYNC_INVALID_EL0_32

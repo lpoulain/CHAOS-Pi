@@ -1,6 +1,6 @@
 SRCS = $(wildcard *.c kernel/*.c drivers/*.c gui/*.c lib/*.c fs/*.c)
 OBJS = $(SRCS:.c=.o)
-CFLAGS = -g -gdwarf-4 -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
+CFLAGS = -g -gdwarf-3 -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
 INCLUDE = -I lib -I drivers -I gui -I kernel -I . -I fs
 
 all: clean kernel8.img
@@ -11,11 +11,15 @@ start.o: start.S
 entry.o: entry.S
 	aarch64-none-elf-gcc $(CFLAGS) -c entry.S -o entry.o
 
+syscall.o: kernel/syscall.S
+	aarch64-none-elf-gcc $(CFLAGS) -c kernel/syscall.S -o syscall.o
+
 %.o: %.c
 	aarch64-none-elf-gcc $(CFLAGS) $(INCLUDE) -c $< -o $@
 
-kernel8.img: start.o entry.o $(OBJS)
-	aarch64-none-elf-ld -nostdlib -nostartfiles start.o entry.o $(OBJS) -T link.ld -o kernel8.elf
+kernel8.img: start.o entry.o syscall.o $(OBJS)
+	aarch64-none-elf-ld -nostdlib -nostartfiles start.o entry.o syscall.o $(OBJS) -T link.ld -o kernel8.elf
+	aarch64-none-elf-ld -nostdlib -nostartfiles start.o entry.o syscall.o $(OBJS) -T link_sym.ld -o kernel8_sym.elf
 	aarch64-none-elf-objcopy -O binary kernel8.elf kernel8.img
 
 clean:

@@ -18,11 +18,14 @@ CHAOS right now offers minimum functionalities:
 - Fixed and proportionally-spaced fonts
 - Partial FAT32 filesystem support
 - Handling of CPU exceptions (and displays debbuging information in case a crash occurs)
+- Virtual memory by programming the MMU (in progress)
+- The ability to execute some code in user mode and access I/O through system calls (in progress)
 - A basic Application Launcher, allowing to start apps which can interact with the touchscreen. Right now four apps are available:
     - A Mandelbrot app (see below)
     - A Filesystem app which looks at the FAT32 partitions on the SD card and displays the content of the first partition's root directory
     - A Kernel Heap app, which allows to examine the system heap
     - A Memory app, which allows to examine areas in the system's memory
+    - A Fractal fern app (see below)
 
 Pressing the lower left corner (or the Esc key if using QEMU) will switch back to the App Launcher.
 
@@ -39,6 +42,10 @@ The Mandelbrot app displays the Mandelbrot Set and provides the following featur
     - Tap on the top right end corner to return to the initial zoom
     - Tap on the bottom left end corner to quit the app to return to the main menu
 - It has its own fixed-size and proportional fonts as well as an memory hex viewer (both on the screen or on the UART) for debugging purposes
+
+## Fern App (User Mode)
+
+The Fern app displays the Barnsley fractal Fern. Its main purpose is to showcase how code can be executed in EL0 (Exception Level 0) a.k.a. in user mode. It displays the wallpaper and draws each single point using a system call.
 
 ## Thanks
 

@@ -2,14 +2,14 @@
 #include "elf.h"
 #include "dwarf.h"
 #include "debug.h"
-#include "display.h"
+#include "uart.h"
 #include "kheap.h"
 
 #define MAX_FUNCTION_RANGES	700
 
 static uint8 DW_FORM_size[33] = {
-	0, 4, 0, 0, 0, 2, 4, 8,
-	0, 0, 0, 1, 0, 0, 4, 0,
+	0, 8, 0, 0, 0, 2, 4, 8,
+	0, 0, 0, 1, 1, 0, 4, 0,
 	0, 1, 2, 4, 8, 0, 0, 4,
 	0, 0, 0, 0, 0, 0, 0, 0,
 	0
@@ -79,19 +79,19 @@ typedef struct __attribute__((packed)) {
 // Macros to try to avoid wild reads/writes
 #define CHECK_VALID_DIE(ptr) \
     if (ptr < elf->section[ELF_SECTION_DEBUG_INFO].start || ptr > elf->section[ELF_SECTION_DEBUG_INFO].end) {	\
-    	printf("ERROR: DIE pointer outside of range: %x\n", ptr);							\
+    	uart_printf("ERROR: DIE pointer outside of range: %X\n", ptr);							\
     	return;																		\
     }
 
 #define CHECK_VALID_SCHEMA(ptr)	\
     if (ptr < elf->section[ELF_SECTION_DEBUG_ABBREV].start || ptr > elf->section[ELF_SECTION_DEBUG_ABBREV].end) {	\
-    	printf("ERROR: schema pointer outside of range: %x\n", ptr);								\
+    	uart_printf("ERROR: schema pointer outside of range: %X\n", ptr);								\
     	return;																				\
     }
 
 #define CHECK_VALID_ATTRIBUTE(ptr, sch) 								\
     if (*ptr < 0 || *ptr > 0x20) {								\
-    	printf("ERROR: invalid attribute number (%d). Schema: %x/%x\n", *ptr, ptr, sch);	\
+    	uart_printf("ERROR: invalid attribute number (%d). Schema: %X/%X\n", *ptr, ptr, sch);	\
     	return;												\
     }
 
@@ -102,7 +102,7 @@ int debug_info_find_address(void *ptr, StackFrame *frame) {
 	for (int i=0; i<nb_function_ranges; i++) {
 		if ((unsigned char *)ptr >= functionRanges[i].low_pc && (unsigned char *)ptr < functionRanges[i].low_pc + functionRanges[i].high_pc) {
 			if (functionRanges[i].name == 0) {
-				printf("Problem idx %d [%x-%x]\n", i, functionRanges[i].low_pc, functionRanges[i].low_pc+functionRanges[i].high_pc);
+				uart_printf("Problem idx %d [%x-%x]\n", i, functionRanges[i].low_pc, functionRanges[i].low_pc+functionRanges[i].high_pc);
 				return 0;
 			}
 			frame->function = functionRanges[i].name;
@@ -142,10 +142,10 @@ void debug_info_load(Elf *elf) {
 
 		// Finds the schema address in mem
 		// for each type of DIE
-		unsigned char *schema = header->abbrev_offset;
+		unsigned char *schema = (unsigned char *)(uint64)header->abbrev_offset;
 		CHECK_VALID_SCHEMA(schema)
 		DIE_schema[1] = schema;
-		if (is_debug()) printf("Schema %d: %x (offset %x)\n", 1, schema, schema - elf->section[ELF_SECTION_DEBUG_ABBREV].start);
+		if (is_debug()) uart_printf("Schema %d: %x (offset %x)\n", 1, schema, schema - elf->section[ELF_SECTION_DEBUG_ABBREV].start);
 		nb_types = 1;
 		while (schema < elf->section[ELF_SECTION_DEBUG_ABBREV].end) {
 			CHECK_VALID_SCHEMA(schema)
@@ -157,19 +157,19 @@ void debug_info_load(Elf *elf) {
 
 			nb_types++;
 			if (nb_types >= 100) {
-				printf("Error: too many DIE types: %x (%x / %x)\n", nb_types, schema, schema - elf->section[ELF_SECTION_DEBUG_ABBREV].start);
+				uart_printf("Error: too many DIE types: %x (%x / %x)\n", nb_types, schema, schema - elf->section[ELF_SECTION_DEBUG_ABBREV].start);
 				return;
 			}
 			DIE_schema[nb_types] = schema;
-			if (is_debug()) printf("Schema %d: %x (offset %x)\n", nb_types, schema, schema - elf->section[ELF_SECTION_DEBUG_ABBREV].start);
+			if (is_debug()) uart_printf("Schema %d: %x (offset %x)\n", nb_types, schema, schema - elf->section[ELF_SECTION_DEBUG_ABBREV].start);
 		}
-
+		uart_printf("CU contains %d types\n", nb_types);
 		uint *tmp = (uint*)die, n1, n2;
 		uint compilation_unit_size = *tmp;
 		unsigned char *end_compilation_unit = die + header->length + 4;
 		uint64 compilation_unit_start = (uint64)die;
 		die += 11;
-		if (is_debug()) printf("Compilation unit at %x, size: %x\n", (die - start), compilation_unit_size);
+		if (is_debug()) uart_printf("Compilation unit at %x, size: %x, end: %X\n", (die - start), compilation_unit_size, end_compilation_unit);
 
 		while (die < end_compilation_unit) {
 			CHECK_VALID_DIE(die)
@@ -178,10 +178,10 @@ void debug_info_load(Elf *elf) {
 				die++;
 				continue;
 			} else if (*die > nb_types) {
-				printf("UNKNOWN DIE: %d (%x, offset %x)\n", *die, die, (die - start));
+				uart_printf("UNKNOWN DIE: %d (%X, offset %x)\n", *die, die, (die - start));
 				return;
 			}
-			if (is_debug()) printf("DIE: %d (%x)\n", *die, (die - start));
+			if (is_debug()) uart_printf("DIE: %d (%x)\n", *die, (die - start));
 
 			schema = DIE_schema[*die];
 			uint8 *schema_top = schema;
@@ -209,7 +209,7 @@ void debug_info_load(Elf *elf) {
 				CHECK_VALID_DIE(die)
 				CHECK_VALID_ATTRIBUTE(schema, schema_top)
 
-				if (is_debug()) printf("Attr DW_FORM_%s (%d) (%x, die=%x)\n", DW_FORM_name[*schema], *schema, (schema - elf->section[ELF_SECTION_DEBUG_ABBREV].start), die - elf->section[ELF_SECTION_DEBUG_INFO].start);
+				if (is_debug()) uart_printf("Attr DW_FORM_%s (%d) (%x, die=%x)\n", DW_FORM_name[*schema], *schema, (schema - elf->section[ELF_SECTION_DEBUG_ABBREV].start), die - elf->section[ELF_SECTION_DEBUG_INFO].start);
 
 				// If this is DIE of type DW_TAG_subprogram
 				// we care about its fields
@@ -228,11 +228,13 @@ void debug_info_load(Elf *elf) {
 				}
 				else {
 					switch (*schema) {
+						case DW_FORM_block1:
 						case DW_FORM_string:
 							die += strlen((char*)die) + 1;
 							break;
 						case DW_FORM_flag_present:
 							break;
+						case DW_FORM_block:
 						case DW_FORM_exprloc:
 							n2 = decodeULEB128(die, &n1);
 //							printf("DW_FORM_exprloc [%d] [%d]\n", n1, n2);
@@ -242,7 +244,7 @@ void debug_info_load(Elf *elf) {
 //							if (*(schema+1) != 0 || *(schema+2) != 0) schema++;
 							break;
 						default:
-							printf("UNKNOWN DW_FORM: %d (%x, offset %x)\n", *schema, schema, schema - elf->section[ELF_SECTION_DEBUG_ABBREV].start);
+							uart_printf("UNKNOWN DW_FORM: %d (%x, offset %x)\n", *schema, schema, schema - elf->section[ELF_SECTION_DEBUG_ABBREV].start);
 							return;
 					}
 				}

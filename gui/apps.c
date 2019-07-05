@@ -5,6 +5,9 @@
 #include "font.h"
 #include "widgets.h"
 #include "touchscreen.h"
+#include "syscall.h"
+
+void switch_el0();
 
 extern Heap kheap;
 extern uint *buffer;
@@ -69,8 +72,8 @@ void app_memory_refresh() {
 	display_dump_mem(app_memory_ptr, 512, 0, 0);
 }
 
-void app_memory_up() { if (app_memory_ptr > 0) app_memory_ptr -= 512; app_memory_refresh(); }
-void app_memory_down() { app_memory_ptr += 512;	app_memory_refresh(); }
+void app_memory_up() { if (app_memory_ptr > 0) app_memory_ptr -= 128; app_memory_refresh(); }
+void app_memory_down() { app_memory_ptr += 128;	app_memory_refresh(); }
 void app_memory_text() { app_memory_ptr = &__text_start__; app_memory_refresh(); }
 void app_memory_rodata() { app_memory_ptr = &__rodata_start__; app_memory_refresh(); }
 void app_memory_data() { app_memory_ptr = &__data_start__; app_memory_refresh(); }
@@ -134,4 +137,70 @@ void app_memory_wake_up(UserInterface *ui) {
 	set_font(0);
 	UI_draw(ui);
 	set_font(-1);
+}
+
+/////////////////////////////////////////////////////////
+
+void app_fern_load(UserInterface *ui) { }
+
+void app_fern_wake_up(UserInterface *ui) {
+    switch_el0();
+
+    sys_draw_wallpaper();
+
+    int64 x = 0, y = 0, a, b, c, d, e, f, new_x, new_y;
+
+    uint p;
+    uint64 rnd = 234234;
+    int x_px, y_px;
+    int i;
+
+    for (i=0; i<20000; i++) {
+        rnd = (rnd * 214013L + 2531011L) >> 16;
+
+        p = rnd % 100;
+        if (p == 0) {
+            a = 0;
+            b = 0;
+            c = 0;
+            d = 1600;
+            e = 0;
+            f = 0;
+        } else if (p > 0 && p < 86) {
+            a = 8500;
+            b = 400;
+            c = -400;
+            d = 8500;
+            e = 0;
+            f = 16000;
+        } else if (p >= 86 && p < 93) {
+            a = 2000;
+            b = -2600;
+            c = 2300;
+            d = 2200;
+            e = 0;
+            f = 16000;
+        } else {
+            a = -1500;
+            b = 2800;
+            c = 2600;
+            d = 2400;
+            e = 0;
+            f = 4400;
+        }
+
+        new_x = (x*a + y*b) / 10000 + e;
+        new_y = (x*c + y*d) / 10000 + f;
+
+        x = new_x;
+        y = new_y;
+
+        y_px = (int)(x*60/10000) + 240;
+        x_px = (int)(y*60/10000) + 150;
+
+//printf("x=%d y=%d rnd=%d\n", x_px, y_px, rnd);
+
+        sys_draw_pixel(x_px, y_px);
+//        draw_pixel(x_px, y_px, 0xFF00);
+    }	
 }

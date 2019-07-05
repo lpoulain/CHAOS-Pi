@@ -1,5 +1,11 @@
 OUTPUT_ARCH(aarch64)
 ENTRY(_start)
+
+PHDRS
+{
+    debug_info PT_LOAD;
+}
+
 SECTIONS
 {
         /*
@@ -15,36 +21,25 @@ SECTIONS
          * Next we put the rest of the code.
          */
         .text : {
-                . = ALIGN(16);
+                . = ALIGN(4);
                  __text_start__ = .;            /* Label in case we want address of text section start */
                 *(.text .text.*)
                  __text_end__ = .;              /* Label in case we want address of text section end */
 
-                 . = ALIGN(4096);
                 __debug_str__ = .;
-                *(.debug_str .debug_str.*)
-                __debug_str_end__ = .;
-
-                 . = ALIGN(16);
+                __debug_str_end__ = .; 
+                __debug_abbrev__ = .;
+                __debug_abbrev_end__ = .; 
+                __debug_info__ = .;
+                __debug_info_end__ = .;
                 __debug_line__ = .;
-                *(.debug_line .debug_line.*)
                 __debug_line_end__ = .;
 
-                 . = ALIGN(16);
-                __debug_info__ = .;
-                *(.debug_info .debug_info.*)
-                __debug_info_end__ = .;
-
-                . = ALIGN(16);
-                __debug_abbrev__ = .;
-                *(.debug_abbrev .debug_abbrev.*)
-                __debug_abbrev_end__ = .;
         }
 
         /* 
          * Next we put the rodata .. C/C++ compilers store preset constants here.
          */
-        . = ALIGN(2097152);
         .rodata : {
         . = ALIGN(4);
         __rodata_start__ = .;           /* Label in case we want address of rodata section start */
@@ -85,7 +80,6 @@ SECTIONS
                  __bss_end = .;
         }
 
-        . = ALIGN(2097152);
         .stack_core0 : {
         . = ALIGN(16);                          /* Stack must always be aligned to 16 byte boundary AAPCS64 call standard */
         __stack_start_core0__ = .;
@@ -98,7 +92,6 @@ SECTIONS
         __stack_end_core0__ = .;    
     }
 
-        . = ALIGN(4096);
         .stack_core1 : {
         . = ALIGN(16);                          /* Stack must always be aligned to 16 byte boundary AAPCS64 call standard */
         __stack_start_core1__ = .;
@@ -111,7 +104,6 @@ SECTIONS
         __stack_end_core1__ = .;    
     }
 
-        . = ALIGN(4096);
         .stack_core2 :  {
         . = ALIGN(16);                           /* Stack must always be aligned to 16 byte boundary AAPCS call standard */
         __stack_start_core2__ = .;
@@ -124,7 +116,6 @@ SECTIONS
         __stack_end_core2__ = .;  
     }
 
-        . = ALIGN(4096);
         .stack_core3 :  {
         . = ALIGN(16);                          /* Stack must always be aligned to 16 byte boundary AAPCS call standard */
         __stack_start_core3__ = .;
@@ -136,19 +127,23 @@ SECTIONS
         __EL2_stack_core3 = .;
         __stack_end_core3__ = .;  
     }
-/*
-    .debug_str : { *(.debug_str .debug_str.*) }
+
+    .debug_str : { *(.debug_str) }
     .debug_loc : { *(.debug_loc) }
     .debug_abbrev : { *(.debug_abbrev) }
-    .debug_info : { *(.debug_info .debug_info.*) }
+    .debug_info BLOCK(4K) : ALIGN(4K)
+    {
+        debug_info = .;
+        *(.debug_info)
+    } :debug_info
+
     .debug_macinfo : { *(.debug_macinfo) }
     .debug_pubnames : { *(.debug_pubnames) }
     .debug_pubtypes : { *(.debug_pubtypes) }
     .debug_line : { *(.debug_line) }
     .debug_aranges : { *(.debug_aranges) }
     .debug_frame : { *(.debug_frame) }
-*/
-        . = ALIGN(4096);
+
         .heap : {
         . = ALIGN(4);
         __heap_start__ = .;                     /* Label in case we want address of heap section start */
